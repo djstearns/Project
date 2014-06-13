@@ -430,9 +430,9 @@ class ProjectsController extends ProjectAppController {
 		
 		foreach($projectToOutput as $i => $obj){
 			$shellstr .=
-			"$thisshell->dispatchShell('Bake model ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme croogo');
-			$thisshell->dispatchShell('Bake controller ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme croogo --admin');
-			$thisshell->dispatchShell('Bake view ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme croogo');
+			"$thisshell->dispatchShell('Bake model ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project');
+			$thisshell->dispatchShell('Bake controller ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project --admin');
+			$thisshell->dispatchShell('Bake view ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project');
 			";
 			
 			$sqlstring .= "CREATE TABLE IF NOT EXISTS ".$obj['Pobject']['name']." (";
