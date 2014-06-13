@@ -430,9 +430,9 @@ class ProjectsController extends ProjectAppController {
 		
 		foreach($projectToOutput as $i => $obj){
 			$shellstr .=
-			"$thisshell->dispatchShell('Bake model ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project');
-			$thisshell->dispatchShell('Bake controller ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project --admin');
-			$thisshell->dispatchShell('Bake view ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project');
+			"\$thisshell->dispatchShell('Bake model ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project');
+			\$thisshell->dispatchShell('Bake controller ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project --admin');
+			\$thisshell->dispatchShell('Bake view ".ucfirst($obj['Pobject']['name'])." --plugin ".$pluginname." --theme project');
 			";
 			
 			$sqlstring .= "CREATE TABLE IF NOT EXISTS ".$obj['Pobject']['name']." (";
@@ -559,7 +559,7 @@ class ProjectsController extends ProjectAppController {
 		$str=str_replace("Example", $pluginname, $str);
 		$str=str_replace("example",$lcpluginname, $str);
 		$str=str_replace("sql_create", $sqlstring, $str);
-		$str=str_replace("insert_shell_here", $shellstring, $str);
+		$str=str_replace("insert_shell_here", $shellstr, $str);
 		file_put_contents($newpath.'/Config/'.$pluginname.'Activation.php', $str);
 		
 		//create migration
@@ -625,11 +625,7 @@ class ProjectsController extends ProjectAppController {
 		file_put_contents($newpath.'/Config/bootstrap.php', $str.$adminmenustr);
 		
 		//create models, controllers, views
-		
-		$thisshell->dispatchShell('Bake model Letters --plugin Jamiesapp --theme croogo');
-		$thisshell->dispatchShell('Bake controller Letters --plugin Jamiesapp --theme croogo --admin');
-		$thisshell->dispatchShell('Bake view Letters --plugin Jamiesapp --theme croogo');
-		
+	
 		
 		$this->redirect(array('plugin'=>'extensions', 'controller'=>'extensions_plugins'));
 	}
