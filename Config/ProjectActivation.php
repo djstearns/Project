@@ -34,15 +34,7 @@ class ProjectActivation {
 		$controller->Croogo->addAco('Project/Project/index', array('registered', 'public')); // ProjectController::index()
 		
 		//create tables
-		App::uses('ShellDispatcher', 'Console');
-		App::uses('BakeShell', 'Console/Command');
-		App::uses('Shell', 'Console');
-		App::uses('AppShell', 'Console/Command');
-		App::uses('Model', 'Model');
-		
-		$thisshell = new Shell();
-		$thisshell->initialize();
-		$thisshell->dispatchShell('cake schema create --plugin Project');
+
 		
 		$db = ConnectionManager::getDataSource('default');
 		$sqlstr = "
