@@ -1,0 +1,12 @@
+<Alloy>
+    <TabGroup id="tabGroup">
+    	<Require src="home" id="tabHome" />
+	    <Tab title="Letters" icon="KS_nav_ui.png" id="recipestab">
+			<Require src="letters" id="recipestable" />
+		</Tab>
+		<Tab title="Kids" icon="KS_nav_ui.png" id="recipestab">
+			<Require src="kids" id ="items">
+		</Tab>
+		
+    </TabGroup>
+</Alloy>

@@ -606,6 +606,15 @@ class ProjectsController extends ProjectAppController {
 		$str=str_replace("example", $lcpluginname, $str);
 		file_put_contents($newpath.'/Config/events.php', $str);
 		
+		//MOBILE
+		$str=file_get_contents($newpath.'/Controller/Controller.php');
+		$str=str_replace("lcPLUGIN", $lcpluginname, $str);
+		$str=str_replace("PLUGIN", $pluginname, $str);
+		$str=str_replace("HOST", $projectdata['Project']['host'], $str);
+		file_put_contents($newpath.'/Controller/Controller.php', $str);
+		rename($newpath.'/Controller/Controller.php', $newpath.'/Controller/'.$pluginname.'Controller.php');
+		
+		
 		//create bootstrap file: create menu above, create string for admin menu in field parse above, and create area array for fields with CKeditor.
 		//bootstrap file
 		
