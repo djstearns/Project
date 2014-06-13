@@ -43,12 +43,7 @@ class ExampleActivation {
 		
 		$thisshell = new Shell();
 		$thisshell->initialize();
-		$thisshell->dispatchShell('Bake model Kids --plugin Jamiesapp --theme croogo');
-		$thisshell->dispatchShell('Bake model Letters --plugin Jamiesapp --theme croogo');
-		$thisshell->dispatchShell('Bake controller Kids --plugin Jamiesapp --theme croogo --admin');
-		$thisshell->dispatchShell('Bake controller Letters --plugin Jamiesapp --theme croogo --admin');
-		$thisshell->dispatchShell('Bake view Kids --plugin Jamiesapp --theme croogo');
-		$thisshell->dispatchShell('Bake view Letters --plugin Jamiesapp --theme croogo');
+		insert_shell_here
 		
 		App::uses('CroogoPlugin', 'Extensions.Lib');
 		$CroogoPlugin = new CroogoPlugin();
