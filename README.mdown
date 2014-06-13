@@ -1,3 +1,15 @@
+# The Plugin Plugin...for making plugins...:)
+
+This plugin is simple to install.
+1) Drop the zip or folder in your plugin folder in Croogo 1.5.7
+2) Activate
+3) Generate the ACO/ARO (will reduce this step)
+4) Migrate
+5) Use the new admin tab to create a project record, define its Objects (tables), and define the objects fields.
+6) Click the far right icon on the project list page, and, PRESTO!
+7) Your plugin is baked and ready for data after following steps 2 & 3 with the created plugin.
+
+
 # Croogo Plugin 
 
 **Croogo** is a free, open source, content management system for PHP, released under [MIT License](http://github.com/croogo/croogo/blob/master/LICENSE.txt).
