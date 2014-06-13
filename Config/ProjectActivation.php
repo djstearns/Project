@@ -32,7 +32,29 @@ class ProjectActivation {
 		// ACL: set ACOs with permissions
 		$controller->Croogo->addAco('Project/Project/admin_index'); // ProjectController::admin_index()
 		$controller->Croogo->addAco('Project/Project/index', array('registered', 'public')); // ProjectController::index()
+		
+		//create tables
+		App::uses('ShellDispatcher', 'Console');
+		App::uses('BakeShell', 'Console/Command');
+		App::uses('Shell', 'Console');
+		App::uses('AppShell', 'Console/Command');
+		App::uses('Model', 'Model');
+		
+		$thisshell = new Shell();
+		$thisshell->initialize();
+		$thisshell->dispatchShell('cake schema create --plugin Project');
+		
+		$db = ConnectionManager::getDataSource('default');
+		$sqlstr = "
+		INSERT INTO ftypes (id, name, sqltype, extra, created, modified) VALUES
+		(1, 'string', 'varchar', NULL, '2013-11-17 00:00:00', '2014-01-09 00:00:00'),
+		(2, 'boolean', 'tinyint', NULL, '2013-11-17 00:00:00', '2014-01-09 00:00:00'),
+		(4, 'datetime', 'datetime', NULL, '2013-11-17 00:00:00', '2014-01-09 00:00:00'),
+		(5, 'integer', 'int', NULL, '2013-11-17 00:00:00', '2013-12-26 00:00:00'),
+		(6, 'text', 'text', NULL, '2014-01-09 00:00:00', '2014-01-09 00:00:00');";
 
+		$db->rawQuery($sqlstr);
+		
 		$this->Link = ClassRegistry::init('Menus.Link');
 
 		// Main menu: add an Project link
