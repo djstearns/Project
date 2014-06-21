@@ -31,9 +31,9 @@ function actionLogin(e) {
                     
                     
                     if (OS_IOS) {
-                    	var loginwin = Alloy.Globals.loginwin;
-	                    loginwin.close();
-	                    Alloy.Globals.loginwin =  null;
+                    	//var loginwin = Alloy.Globals.loginwin;
+	                    //loginwin.close();
+	                    //Alloy.Globals.loginwin =  null;
                         var navgroup = Alloy.Globals.navgroup;
                         navgroup.close();
                         navgroup = null;

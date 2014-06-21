@@ -3,9 +3,9 @@
     <Require src="login_form" id="loginForm" platform="android"/>
     
     <!-- iPhone -->
-    <Window id="login" platform="ios">
-        <NavigationGroup id="navgroup">
-            <Require src="login_form" id="loginForm"/>
-        </NavigationGroup>
-    </Window>
+    
+	<NavigationWindow id="navgroup" platform="ios">
+		<Require src="login_form" id="loginForm"/>
+	</NavigationWindow>
+
 </Alloy>

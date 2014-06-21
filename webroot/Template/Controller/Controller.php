@@ -1,6 +1,6 @@
 <?php
 
-App::uses('PLUGINAppController', 'PLUGIN.Controller');
+App::uses('PLUGINNAMEAppController', 'PLUGINNAME.Controller');
 //TODO: fix index_home.xml
 /**
  * Example Controller
@@ -12,7 +12,7 @@ App::uses('PLUGINAppController', 'PLUGIN.Controller');
  * @license  http://www.opensource.org/licenses/mit-license.php The MIT License
  * @link     http://www.croogo.org
  */
-class PLUGINController extends PLUGINAppController {
+class PLUGINNAMEController extends PLUGINNAMEAppController {
 
 /**
  * Controller name
@@ -20,8 +20,9 @@ class PLUGINController extends PLUGINAppController {
  * @var string
  * @access public
  */
-	public $name = 'PLUGIN';
-
+	public $name = 'PLUGINNAME';
+	
+	public $_tables = array();
 /**
  * Models used by the Controller
  *
@@ -62,7 +63,9 @@ class PLUGINController extends PLUGINAppController {
 									"schema_migrations",
 									"flds_fldbehaviors",
 									"fldbehaviors",
-									"vocabularies");
+									"vocabularies",
+									"missing"
+									);
 
 		
 
@@ -84,21 +87,26 @@ class PLUGINController extends PLUGINAppController {
 		App::uses('CakeSchema', 'Model');
 		App::uses('AppShell', 'Console/Command');
 	
-		$thisshell = new Shell();
-		$thisshell->initialize();
-		$thisshell->dispatchShell('Schema generate -f -o');
+		//$thisshell = new Shell();
+		//$thisshell->initialize();
+		//$thisshell->dispatchShell('Schema generate -f -o');
 		
 		App::uses('File', 'Utility');
 		App::import('Model', 'CakeSchema', false);
 		App::import('Model', 'ConnectionManager');
 		
-		$db = ConnectionManager::getDataSource('default');
-		$schema =& new CakeSchema(array('name'=>'app'));
-		$schema = $schema->load();
-	
-		App::import('Cake', 'Shell','Console/Command');
-	
-	
+		$schema =& new CakeSchema(array('name'=>'DsSchema','plugin'=>'PLUGINNAME'));
+		
+	    $schema = $schema->read();
+        
+		foreach($schema['tables'] as $tblname => $tbl){
+            if(!in_array($tblname, $this->ignoretables)){
+                $this->_tables[$tblname] = $tbl;
+            }
+            
+        }
+    
+		
 		$assocaitions = array();
 		
 		//build alloy.js!
@@ -110,7 +118,7 @@ class PLUGINController extends PLUGINAppController {
 		
 		$alloystr3 = "Alloy.Globals.PLUGIN = 'lcPLUGIN/';";
 		
-		foreach($schema->tables as $table => $fields) {
+		foreach($schema['tables'] as $table => $fields) {
 			
 			if(!in_array($table,$this->ignoretables)){
 				
@@ -132,15 +140,15 @@ class PLUGINController extends PLUGINAppController {
 		}
 		
 		$alloystr = substr($alloystr, 0, -1);
-		$alloystr .= '}';
+		$alloystr .= '};
+		';
 		
 		//echo $alloystr;
 		//debugger::dump($alloystr);
 		
-		$alloystr2 .= '}';
-		$this->bakeMobileAlloyFile("Alloy.Globals.BASEURL = 'HOST/';".$alloystr, $alloystr2, $alloystr3);
-		
-
+		$alloystr2 .= '};
+		';
+		$this->bakeMobileAlloyFile("Alloy.Globals.BASEURL = 'http://HOST/';".$alloystr, $alloystr2, $alloystr3);
 		
 		$this->Session->setFlash(__('Built files! Download from webroot!.', true), 'default', array('class' => 'success'));
 
@@ -149,10 +157,21 @@ class PLUGINController extends PLUGINAppController {
 		
 	}
 	
+	function admin_downloadmobile(){
+		$source_dir = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/';
+		$dest_dir =  rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/';
+		$zip_file = 'PLUGINNAMEmobile'.date('Ymd').'.zip';
+ 
+		if($this->Zip($source_dir, $dest_dir.$zip_file)!=false){
+	
+			$this->redirect('http://HOST'.'/lcPLUGIN/'.$zip_file);
+		}
+	}
+	
 	
 	
 	function bakeMobileAlloyFile($alloystr , $alloystr2, $alloystr3){
-		$totalalloystr = $alloystr . $alloystr2. $alloystr3;
+		$totalalloystr = $alloystr3. $alloystr . $alloystr2;
 		$totalalloystr .= "//:::::::APP CREATOR SYNC OPTIONS:::::::
 			//::::THE DB:::::::
 			//USER WILL BE ASKED: 'will there be an onboard DB?'
@@ -243,10 +262,11 @@ class PLUGINController extends PLUGINAppController {
 					Ti.API.info(this.responseText);
 					if(json.message=='Saved!'){
 						//save local data
+						var model = Alloy.Collection[modelname].get(json.id);
 						thelocaldata['id'] = json.id;
 						var myModel = Alloy.createModel(modelname, thelocaldata);
 						// save model
-						myModel.save();
+						myModel.set(thelocaldata).save();
 						// force tables to update
 						Alloy.Collections[modelname].fetch();
 					   
@@ -269,8 +289,8 @@ class PLUGINController extends PLUGINAppController {
 					},
 					timeout : 1000,
 				});
-				sendit.open('POST', Alloy.Globals.BASEURL+tblname+'/mobiledelete.json');
-				Ti.API.info( Alloy.Globals.BASEURL+tblname+'/mobiledelete');
+				sendit.open('POST', Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+tblname+'/mobiledelete.json');
+				Ti.API.info( Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+tblname+'/mobiledelete');
 				//sendit.open('https://maps.googleapis.com/maps/api/place/nearbysearch/json?types=hospital&location=13.01883,80.266113&radius=1000&sensor=false&key=AIzaSyDStAQQtoqnewuLdFwiT-FO0vtkeVx8Sks');
 				sendit.send({'id':id});
 				// Function to be called upon a successful response
@@ -289,7 +309,7 @@ class PLUGINController extends PLUGINAppController {
 					if (typeof Alloy.Globals.RELATIONSHIP[modelname][manytomanyaddscreen] != 'undefined') {
 						//HM
 						
-						globalopenDetail(e, Alloy.Globals.RELATIONSHIP[modelname].sModelname);
+						globalopenDetail(e, Alloy.Globals.RELATIONSHIP[modelname].sModelname, modelname);
 					}else{
 						
 						var db = Titanium.Database.open('_alloy_');
@@ -327,7 +347,7 @@ class PLUGINController extends PLUGINAppController {
 					});
 					// Here you have to change it for your local ip
 					
-					sendit.open('POST', Alloy.Globals.BASEURL+modelname+'/mobileindex.json');
+					sendit.open('POST', Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+modelname+'/mobileindex.json');
 					sendit.send({'token':Ti.App.Properties.getString('token')});
 					sendit.onload = function() {
 						Ti.API.info(this.responseText);
@@ -368,7 +388,7 @@ class PLUGINController extends PLUGINAppController {
 						});
 						// Here you have to change it for your local ip
 						
-						sendit.open('POST', Alloy.Globals.BASEURL+modelname+'/mobileindex.json');
+						sendit.open('POST', Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+modelname+'/mobileindex.json');
 						sendit.send({'token':Ti.App.Properties.getString('token')});
 						sendit.onload = function() {
 							Ti.API.info(this.responseText);
@@ -517,13 +537,14 @@ class PLUGINController extends PLUGINAppController {
 				}
 			}
 			
-			function globalopenDetail(_e, Modelname){
+			function globalopenDetail(_e, Modelname, tablename){
 					var things = Alloy.Collections[Modelname];
 					//Ti.API.info(things.get(_e.rowData.model));
-					var addController = Alloy.createController(Modelname+'detail', {
+					var addController = Alloy.createController(tablename+'detail', {
 						parentTab: Alloy.Globals.tabGroup.getActiveTab(),
 						dataId: _e.rowData.dataId,
-						model: things.get(_e.rowData.dataId)
+						model: Modelname,
+						tablename: tablename
 					});
 					
 					var addview = addController.getView();
@@ -538,7 +559,7 @@ class PLUGINController extends PLUGINAppController {
 			
 			//create new M2M controller
 			
-			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/';
+			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/';
 		
 			$path = $pathx;
 			$filename = $path  . 'alloy.js';
@@ -580,29 +601,34 @@ class PLUGINController extends PLUGINAppController {
 					"singlename":"'.$this->_singularName($this->_modelName($name)).'",
 					"tblname":"'.$this->_pluralName($name).'",
 					"sModelname":"'.$name.'",';
+		if(!empty($data['associations']['belongsTo'])){
+			foreach($data['associations']['belongsTo'] as $num => $relname){
+				$str .= '"'.$this->_pluralName($relname['alias']).'":{
+							"relation":"BT",
+							"tblname":"'.$this->_pluralName($relname['alias']).'",
+							"Modelname":"'.ucfirst($this->_pluralName($relname['alias'])).'",
+							"modelname":"'.$this->_pluralName($relname['alias']).'",
+							"sModelname":"'.$relname['alias'].'"
+						},';
+			}
+			//delete last comma
+			$str = substr($str, 0, -1);
+		}
 		
-		foreach($data['associations']['belongsTo'] as $num => $relname){
-			$str .= '"'.$this->_pluralName($relname['alias']).'":{
-						"relation":"BT",
-						"tblname":"'.$this->_pluralName($relname['alias']).'",
-						"Modelname":"'.ucfirst($this->_pluralName($relname['alias'])).'",
-						"modelname":"'.$this->_pluralName($relname['alias']).'",
-						"sModelname":"'.$relname['alias'].'"
-					},';
+		if(!empty($data['associations']['hasMany'])){
+			foreach($data['associations']['hasMany'] as $num => $relname){
+				$str .= '"'.$this->_pluralName($relname['alias']).'":{
+							"relation":"HM",
+							"tblname":"'.$this->_pluralName($relname['alias']).'",
+							"Modelname":"'.ucfirst($this->_pluralName($relname['alias'])).'",
+							"modelname":"'.$this->_pluralName($relname['alias']).'",
+							"sModelname":"'.$relname['alias'].'"
+						},';
+			}
+			//delete last comma
+			$str = substr($str, 0, -1);
 		}
-		//delete last comma
-		$str = substr($str, 0, -1);
-		foreach($data['associations']['hasMany'] as $num => $relname){
-			$str .= '"'.$this->_pluralName($relname['alias']).'":{
-						"relation":"HM",
-						"tblname":"'.$this->_pluralName($relname['alias']).'",
-						"Modelname":"'.ucfirst($this->_pluralName($relname['alias'])).'",
-						"modelname":"'.$this->_pluralName($relname['alias']).'",
-						"sModelname":"'.$relname['alias'].'"
-					},';
-		}
-		//delete last comma
-		$str = substr($str, 0, -1);
+		
 		if(!empty($data['associations']['hasAndBelongsToMany'])){
 			
 			$str .= '"related":{';
@@ -624,7 +650,10 @@ class PLUGINController extends PLUGINAppController {
 		$fldstr = '"id":"INTEGER PRIMARY KEY",';
 		
 		foreach($modelArr as $key => $vals){
-			$fldstr .= '"'.$key.'":"'.$vals['type'].'",'; 
+			//sets up mobile database fields
+			if($key != 'id'){
+				$fldstr .= '"'.$key.'":"'.$vals['type'].'",'; 
+			}
 		}
 		//check this inflector!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 		$fldstr = substr($fldstr, 0, -1);					
@@ -663,7 +692,7 @@ class PLUGINController extends PLUGINAppController {
 					};';
 		
 		
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/models/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/models/';
 		
 		$path = $pathx;
 		$filename = $path . Inflector::underscore($name) . '.js';
@@ -766,7 +795,7 @@ class PLUGINController extends PLUGINAppController {
 		
 		$.savebtn.addEventListener('click', function(_e) {
 		
-			globalsave( Alloy.Globals.BASEURL+modelname+'/mobileadd/',
+			globalsave( Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+tblname+'/mobileadd/',
 			 {
 				 ".$fldstr."
 			 },
@@ -793,7 +822,7 @@ class PLUGINController extends PLUGINAppController {
 		});
 		";
 		//create new M2M controller
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/controllers/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/controllers/';
 	
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . 'Add.js';
@@ -878,7 +907,7 @@ class PLUGINController extends PLUGINAppController {
 			};
 			";
 			
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/controllers/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/controllers/';
 	
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . 'chooser.js';
@@ -929,7 +958,8 @@ class PLUGINController extends PLUGINAppController {
 		var dataId = (args.dataId === 0 || args.dataId > 0) ? args.dataId : '';
 		
 		if (dataId !== '') {
-			$.thingDetail.set(args.model.attributes);
+			var model = Alloy.Collections[args.model].get(dataId);
+			$.thingDetail.set(model.attributes);
 			
 			$.thingDetail = _.extend({}, $.thingDetail, {
 				transform : function() {
@@ -956,7 +986,8 @@ class PLUGINController extends PLUGINAppController {
 					},
 					timeout : 1000,
 				});
-			sendit.open('GET', Alloy.Glogals.BASEURL+'workers/mobilesave');
+				//TODO: make lowercase
+			sendit.open('POST', Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+args.model+'/mobilesave');
 			sendit.send({
 				//Model Vars
 				id: $.name.datid,
@@ -978,19 +1009,22 @@ class PLUGINController extends PLUGINAppController {
 		///Buttons!
 		
 		$.cancelbtn.addEventListener('click', function(){
-			$.".$this->_pluralName($name)."detail.close();
+			//$.".$this->_pluralName($name)."detail.close();
+			$.detail.close();
 		});
 		
 		$.savebtn.addEventListener('click', function(){
-			var itemModel = args.model;
+			var itemModel = model;
 			//Model VARS
-			".$cfldstr3."
+			//".$cfldstr3."
 			//End model vars
-			
-			itemModel.save();
+			//TODO: fix all lowercase
+			globalsave(Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+args.tablename+'/mobilesave', {id: $.name.datid,".$cfldstr2."},args.model,{id: $.name.datid,".$cfldstr2."});
+			//itemModel.save();
 			//Alloy.Collections.Thing.fetch();
-			savetoremote();
-			$.".$this->_pluralName($name)."detail.close();
+			//savetoremote();
+			//$.".$this->_pluralName($name)."detail.close();
+			$.detail.close();
 		});
 		
 		 // Android
@@ -1004,8 +1038,10 @@ class PLUGINController extends PLUGINAppController {
 						activity.actionBar.title = L('detail', 'Detail');
 						activity.actionBar.displayHomeAsUp = true; 
 						activity.actionBar.onHomeIconItemSelected = function() {               
-							$.".$this->_pluralName($name)."detail.close();
-							$.".$this->_pluralName($name)."detail = null;
+							//$.".$this->_pluralName($name)."detail.close();
+							$.detail.close();
+							//$.".$this->_pluralName($name)."detail = null;
+							$.detail = null;
 						};             
 					}
 				}
@@ -1013,14 +1049,16 @@ class PLUGINController extends PLUGINAppController {
 			
 			// Back Button - not really necessary here - this is the default behavior anyway?
 			$.".$this->_pluralName($name)."detail.addEventListener('android:back', function() {              
-				$.".$this->_pluralName($name)."detail.close();
-				$.".$this->_pluralName($name)."detail = null;
+				//$.".$this->_pluralName($name)."detail.close();
+				$.detail.close();
+				//$.".$this->_pluralName($name)."detail = null;
+				$.detail = null;
 			});     
 		}";
 		
 		
 		//create new M2M controller
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/controllers/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/controllers/';
 	
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . 'detail.js';
@@ -1081,7 +1119,7 @@ class PLUGINController extends PLUGINAppController {
 						},
 						timeout : 1000,
 					});
-				sendit.open('GET', Alloy.Globals.BASEURL+Modelname+'/mobilesave');
+				sendit.open('POST', Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+Modelname+'/mobilesave');
 				//sendit.open('https://maps.googleapis.com/maps/api/place/nearbysearch/json?types=hospital&location=13.01883,80.266113&radius=1000&sensor=false&key=AIzaSyDStAQQtoqnewuLdFwiT-FO0vtkeVx8Sks');
 				sendit.send({
 					id: $.name.datid,
@@ -1101,7 +1139,8 @@ class PLUGINController extends PLUGINAppController {
 			}
 			
 			$.cancelbtn.addEventListener('click', function(){
-				$.".$name."detail.close();
+				//$.".$name."detail.close();
+				$.detail.close();
 			});
 			
 			$.savebtn.addEventListener('click', function(){
@@ -1115,7 +1154,8 @@ class PLUGINController extends PLUGINAppController {
 				Alloy.Collections.Thing.fetch();
 				//save to remote
 				savetoremote();
-				$.".$name."detail.close();
+				//$.".$name."detail.close();
+				$.detail.close();
 			});
 			
 			 // Android
@@ -1129,8 +1169,10 @@ class PLUGINController extends PLUGINAppController {
 							activity.actionBar.title = L('detail', 'Detail');
 							activity.actionBar.displayHomeAsUp = true; 
 							activity.actionBar.onHomeIconItemSelected = function() {               
-								$.".$name."detail.close();
-								$.".$name."detail = null;
+								//$.".$name."detail.close();
+								$.detail.close();
+								//$.".$name."detail = null;
+								$.detail = null;
 							};             
 						}
 					}
@@ -1138,8 +1180,10 @@ class PLUGINController extends PLUGINAppController {
 				
 				// Back Button - not really necessary here - this is the default behaviour anyway?
 				$.".$name."detail.addEventListener('android:back', function() {              
-					$.".$name."detail.close();
-					$.".$name."detail = null;
+					//$.".$name."detail.close();
+					$.detail.close();
+					//$.".$name."detail = null;
+					$.detail = null;
 				});     
 			}
 			
@@ -1150,7 +1194,7 @@ class PLUGINController extends PLUGINAppController {
 			";
 			
 			//save new M2M controller
-			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/controllers/';
+			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/controllers/';
 		
 			$path = $pathx;
 			$filename = $path . $relname['joinTable'] . 'Edit.js';
@@ -1205,7 +1249,7 @@ class PLUGINController extends PLUGINAppController {
 						var ManyToManys = '';//['related widgets', 'Some Other', 'And another','Yet another','Cancel'];
 						//var hasmultimanytomany = true;
 						//ELSE PRINT
-						var ManyToMany = ".$relationstr.";
+						var ManyToMany = '".$relationstr."';
 						var hasmultimanytomany = false;			
 						//Arguments coming in:
 						//var hasmultimanytomay = false;
@@ -1244,7 +1288,7 @@ class PLUGINController extends PLUGINAppController {
 					if (typeof Alloy.Globals.RELATIONSHIP[tblname][manytomanyaddscreen] != 'undefined') {
 						//HM
 					   mmModelname = Alloy.Globals.RELATIONSHIP[tblname].sModelname;
-						globalopenDetail(e, mmModelname);
+						globalopenDetail(e, mmModelname, tblname);
 						
 					}else{
 						//m2m only!
@@ -1283,7 +1327,7 @@ class PLUGINController extends PLUGINAppController {
 					}
 					
 				}else{
-					globalopenDetail(e, Modelname);
+					globalopenDetail(e, Modelname, tblname);
 				}
 			}
 			
@@ -1305,7 +1349,7 @@ class PLUGINController extends PLUGINAppController {
 				});
 				$.tblview.addEventListener('longpress', function(e) {
 				//var send = things.get(e.rowData.model);
-					globalopenDetail(e, Modelname);
+					globalopenDetail(e, Modelname, tblname);
 				});
 				/*
 				$.tblview.addEventListener('dblclick', function(e) {
@@ -1326,7 +1370,11 @@ class PLUGINController extends PLUGINAppController {
 					//show detail of related.
 					editmany(e);
 				}else{
-					globalopenChild( e, ManyToManys, ManyToMany, hasmultimanytomany, modelname, parentTab );
+					if(ManyToMany == '' && ManyToManys == ''){
+						globalopenDetail(e, Modelname, tblname);
+					}else{
+						globalopenChild( e, ManyToManys, ManyToMany, hasmultimanytomany, modelname, parentTab );
+					}
 			   }
 			});
 			
@@ -1352,7 +1400,7 @@ class PLUGINController extends PLUGINAppController {
 					});
 					// Here you have to change it for your local ip
 					var lnstr = (ln/20)+1;
-					sendit.open('GET', Alloy.Globals.BASEURL+modelname+'/page:'+lnstr.toString());
+					sendit.open('GET', Alloy.Globals.BASEURL+Alloy.Globals.PLUGIN+modelname+'/page:'+lnstr.toString());
 					//sendit.open('https://maps.googleapis.com/maps/api/place/nearbysearch/json?types=hospital&location=13.01883,80.266113&radius=1000&sensor=false&key=AIzaSyDStAQQtoqnewuLdFwiT-FO0vtkeVx8Sks');
 					sendit.send();
 					// Function to be called upon a successful response
@@ -1495,7 +1543,7 @@ class PLUGINController extends PLUGINAppController {
 									deleterecord(row);
 								break;
 								case 2:
-									globalopenDetail(row, Modelname);
+									globalopenDetail(row, Modelname, modelname);
 								break;
 								case 3:
 									deleterecord(row);
@@ -1518,7 +1566,7 @@ class PLUGINController extends PLUGINAppController {
 						alertDialog.addEventListener('click',function(e){
 							switch(e.index){
 								case 0:
-									 globalopenDetail(row, Modelname);
+									 globalopenDetail(row, Modelname, modelname);
 								break;
 								case 1:
 									deleterecord(row);
@@ -1586,7 +1634,7 @@ class PLUGINController extends PLUGINAppController {
 				}
 			});";
 		
-			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/controllers/';
+			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/controllers/';
 			
 			$path = $pathx;
 			$filename = $path . Inflector::underscore($this->_pluralName($name)) . '.js';
@@ -1638,7 +1686,7 @@ class PLUGINController extends PLUGINAppController {
 					<Label id="labelNoRecords" />
 					<TableView searchHidden="true" id="tblview" dataCollection="'.$this->_modelName($name).'" moveable="true" editable="true" filterAttribute="title">
 					  <SearchBar platform="android,ios"/>
-					  <Widget id="is" src="nl.fokkezb.infiniteScroll" onEnd="myLoader" />
+					  <!--<Widget id="is" src="nl.fokkezb.infiniteScroll" onEnd="myLoader" />-->
 					  <TableViewRow id="row" dataId="{id}" title="{name}">
 						
 						<!--<Label class="rowName" text="{name}"></Label>-->
@@ -1667,7 +1715,7 @@ class PLUGINController extends PLUGINAppController {
 		</Alloy>
 		';
 		
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/views/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/views/';
 			
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . '.xml';
@@ -1699,7 +1747,7 @@ class PLUGINController extends PLUGINAppController {
 		</Alloy>
 		';
 		
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/views/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/views/';
 			
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . 'detail.xml';
@@ -1742,7 +1790,7 @@ class PLUGINController extends PLUGINAppController {
 		';
 		
 		
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/views/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/views/';
 			
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . 'chooser.xml';
@@ -1776,7 +1824,7 @@ class PLUGINController extends PLUGINAppController {
 			</Alloy>';
 			
 			
-			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/views/';
+			$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/views/';
 				
 			$path = $pathx;
 			$filename = $path . Inflector::tableize($name) . 'Edit.xml';
@@ -1802,7 +1850,7 @@ class PLUGINController extends PLUGINAppController {
 					$addviewstr .= '<TextField id="'.$key.'" value="{$.thingDetail.'.$key.'}" ></TextField>
 					';
 				//create extra feild (to show name of linked model
-					$addviewstr .= '<TextField id="'.substr($key, 0, $strpos).'name"></TextField>';
+					$addviewstr .= '<TextField id="'.substr($key, 0, $strpos).'"></TextField>';
 				//create extra button!
 					$addviewstr .= '<Button id="pick'.substr($key, 0, $strpos).'">'.substr($key, 0, $strpos).'</Button>';
 				}else{
@@ -1830,7 +1878,7 @@ class PLUGINController extends PLUGINAppController {
 		</Alloy>
 		';
 		//echo $addStr;
-		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGIN/webroot/mobile/app/views/';
+		$pathx = rtrim(getcwd (),'webroot').'Plugin/PLUGINNAME/webroot/mobile/app/views/';
 			
 		$path = $pathx;
 		$filename = $path . $this->_pluralName($name) . 'Add.xml';
@@ -1931,7 +1979,7 @@ class PLUGINController extends PLUGINAppController {
 		$foreignKey = $this->_modelKey($model->name);
 		//echo 'finding One and Many...<br />';
 		//debugger::dump($this->_tables->tables);
-		foreach ($this->_tables->tables as $mname => $otherTable) {
+		foreach ($this->_tables as $mname => $otherTable) {
 			
 				//debugger::dump($mname);
 				//echo 'try getting table for '.$mname.'<br />';
@@ -1992,7 +2040,7 @@ class PLUGINController extends PLUGINAppController {
 		
 		$foreignKey = $this->_modelKey( $this->_singularName($model->name ));
 		//debugger::dump($model->name);
-		foreach ($this->_tables->tables as $tname => $otherTable) {
+		foreach ($this->_tables as $tname => $otherTable) {
 			
 			$tempOtherModel = $this->_getModelObject($this->_modelName($tname), $tname);
 			$modelFieldsTemp = $tempOtherModel->schema(true);
@@ -2164,6 +2212,51 @@ class PLUGINController extends PLUGINAppController {
  */
 	function _controllerPath($name) {
 		return strtolower(Inflector::underscore($name));
+	}
+	
+	function Zip($source, $destination)
+	{
+		if (extension_loaded('zip') === true)
+		{
+			if (file_exists($source) === true)
+			{
+				$zip = new ZipArchive();
+	
+				if ($zip->open($destination, ZIPARCHIVE::CREATE) === true)
+				{
+					$source = realpath($source);
+	
+					if (is_dir($source) === true)
+					{
+						$files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($source), RecursiveIteratorIterator::SELF_FIRST);
+	
+						foreach ($files as $file)
+						{
+							$file = realpath($file);
+	
+							if (is_dir($file) === true)
+							{
+								$zip->addEmptyDir(str_replace($source . '/', '', $file . '/'));
+							}
+	
+							else if (is_file($file) === true)
+							{
+								$zip->addFromString(str_replace($source . '/', '', $file), file_get_contents($file));
+							}
+						}
+					}
+	
+					else if (is_file($source) === true)
+					{
+						$zip->addFromString(basename($source), file_get_contents($source));
+					}
+				}
+	
+				return $zip->close();
+			}
+		}
+	
+		return false;
 	}
 
 }

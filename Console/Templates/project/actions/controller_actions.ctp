@@ -79,6 +79,7 @@ function mobileindex() {
 		$this->data['<?php echo $currentModelName ?>']=$_POST;
 		if ($this-><?php echo $currentModelName ?>->save($this->data)) {
 			$check = array(
+            'id'=>$_POST['id'],
 			'logged' => false,
 			'message' => 'Saved!',
 			);	

@@ -608,8 +608,8 @@ class ProjectsController extends ProjectAppController {
 		
 		//MOBILE
 		$str=file_get_contents($newpath.'/Controller/Controller.php');
-		$str=str_replace("lcPLUGIN", $lcpluginname, $str);
-		$str=str_replace("PLUGIN", $pluginname, $str);
+		$str=str_replace("lcPLUGIN", strtolower($lcpluginname), $str);
+		$str=str_replace("PLUGINNAME", $pluginname, $str);
 		$str=str_replace("HOST", $projectdata['Project']['host'], $str);
 		file_put_contents($newpath.'/Controller/Controller.php', $str);
 		rename($newpath.'/Controller/Controller.php', $newpath.'/Controller/'.$pluginname.'Controller.php');
@@ -633,8 +633,7 @@ class ProjectsController extends ProjectAppController {
 		
 		file_put_contents($newpath.'/Config/bootstrap.php', $str.$adminmenustr);
 		
-		//create models, controllers, views
-	
+		$this->Session->setFlash(__d('croogo', 'The project was built. You may need to refresh the page to see it in your plugins.'), 'default', array('class' => 'success'));
 		
 		$this->redirect(array('plugin'=>'extensions', 'controller'=>'extensions_plugins'));
 	}
