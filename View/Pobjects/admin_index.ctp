@@ -20,7 +20,7 @@ $this->Html
 		
 				  <?php $i = 0;
  $arr = array(); 
-				 foreach($pobjectdata[$i-1]['Pobjectbehavior'] as $Pobjectbehavior){ $arr[] = $Pobjectbehavior['name']; }
+				 foreach($pobjectdata[$i]['Pobjectbehavior'] as $Pobjectbehavior){ $arr[] = $Pobjectbehavior['name']; }
 					$str = implode(',',$arr); 
 					echo '<th>Pobjectbehavior</th>'
  ?>
