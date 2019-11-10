@@ -1,6 +1,6 @@
 # The Plugin Plugin...for making plugins...:)
 
-This plugin is simple to install.
+To install this plugin, follow these steps.
 1) Drop the zip or folder in your plugin folder in Croogo 1.5.7
 2) Activate
 3) Generate the ACO/ARO (will reduce this step)
